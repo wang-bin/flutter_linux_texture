@@ -16,7 +16,7 @@ static GdkGLContext *context = nullptr;
 static bool flutter_texture_populate(FlTextureGL *texture, uint32_t *target,
                                      uint32_t *name, uint32_t *width,
                                      uint32_t *height) {
-  GLuint tex;
+  static GLuint tex = 0;
   unsigned char *buf;
   int x, y;
 
@@ -25,6 +25,7 @@ static bool flutter_texture_populate(FlTextureGL *texture, uint32_t *target,
   assert(context != nullptr);
   gdk_gl_context_make_current(context);
 
+  if (!tex)
   glGenTextures(1, &tex);
   glBindTexture(GL_TEXTURE_2D, tex);
 
@@ -60,6 +61,8 @@ struct _FlRenderTextureGL {
 
 G_DEFINE_TYPE(FlRenderTextureGL, fl_render_texture_gl, fl_texture_gl_get_type())
 
+  FlRenderTextureGL *fl_texture = nullptr;
+
 static gboolean fl_render_texture_gl_populate(FlTextureGL *texture,
                                               uint32_t *target, uint32_t *name,
                                               uint32_t *width, uint32_t *height,
@@ -70,6 +73,9 @@ static gboolean fl_render_texture_gl_populate(FlTextureGL *texture,
                             "populate texture failed");
     return false;
   } else {
+
+    fl_texture_registrar_mark_texture_frame_available(flutter_texture_registrar,
+                                                    (FlTexture *)fl_texture);
     return true;
   }
 }
@@ -86,7 +92,7 @@ static void fl_render_texture_gl_init(__attribute__((unused))
                                       FlRenderTextureGL *self) {}
 
 static FlMethodResponse *new_texture() {
-  FlRenderTextureGL *fl_texture;
+//  FlRenderTextureGL *fl_texture;
   g_autoptr(GError) error = nullptr;
 
   fprintf(stderr, "create Flutter texture\n");
